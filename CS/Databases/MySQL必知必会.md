@@ -4,12 +4,12 @@
 
 <!--ts-->
 * [MySQL 必知必会](#mysql-必知必会)
-   * [1. 了解 SQL](#1-了解-sql)
+   * [1 了解 SQL](#1-了解-sql)
       * [1.1 数据库基础](#11-数据库基础)
       * [1.2 SQL](#12-sql)
-   * [2. MySQL 简介](#2-mysql-简介)
+   * [2 MySQL 简介](#2-mysql-简介)
       * [2.1 什么是 MySQL](#21-什么是-mysql)
-   * [3. 使用 MySQL](#3-使用-mysql)
+   * [3 使用 MySQL](#3-使用-mysql)
       * [3.1 连接](#31-连接)
       * [3.2 选择数据库](#32-选择数据库)
       * [3.3 了解数据库和表](#33-了解数据库和表)
@@ -21,7 +21,7 @@
       * [4.5 检索不同的行](#45-检索不同的行)
       * [4.6 限制结果](#46-限制结果)
       * [4.7 使用完全限定的表名/列名](#47-使用完全限定的表名列名)
-   * [5 排序检索数据](#排序检索数据)
+   * [5 排序检索数据](#5-排序检索数据)
       * [5.1 排序数据](#51-排序数据)
       * [5.2 按多个列排序](#52-按多个列排序)
       * [5.3 指定排序方向](#53-指定排序方向)
@@ -47,11 +47,21 @@
       * [12.1 聚集函数](#121-聚集函数)
       * [12.2 聚合不同值](#122-聚合不同值)
       * [12.3 组合聚合函数](#123-组合聚合函数)
+   * [13 分组数据](#13-分组数据)
+      * [13.1 数据分组](#131-数据分组)
+      * [13.2 创建分组](#132-创建分组)
+      * [13.3 过滤分组](#133-过滤分组)
+      * [13.4 分组和排序](#134-分组和排序)
+      * [13.5 SELECT子句顺序](#135-select子句顺序)
+   * [14 使用子查询](#14-使用子查询)
+      * [14.1 子查询](#141-子查询)
+      * [14.2 利用子查询进行过滤](#142-利用子查询进行过滤)
+      * [14.3 使用计算字段使用子查询](#143-使用计算字段使用子查询)
 
-<!-- Added by: tx-deepocean, at: 2021年 05月 18日 星期二 18:48:42 CST -->
+<!-- Added by: tx-deepocean, at: 2021年 05月 19日 星期三 12:02:00 CST -->
 
 <!--te-->
-## 1. 了解 SQL
+## 1 了解 SQL
 
 ### 1.1 数据库基础
 
@@ -69,7 +79,7 @@
 - 简单易学， 官架子不多
 - 支持非常复杂和高级的数据库操作
 
-## 2. MySQL 简介
+## 2 MySQL 简介
 
 ### 2.1 什么是 MySQL
 
@@ -87,7 +97,7 @@ MySQL 各版本介绍
 - 5 存储过程， 触发器， 游标， 视图等
 - 8 TODO
 
-## 3. 使用 MySQL
+## 3 使用 MySQL
 
 ### 3.1 连接
 
@@ -316,4 +326,114 @@ SELECT COUNT(*) AS num_items,
        MAX(prod_price) AS price_max,
        AVG(prod_price) AS price_avg
 FROM products;
+```
+
+## 13 分组数据
+
+### 13.1 数据分组
+
+分组允许把数据分为多个逻辑组， 以便能对每个组进行聚集计算
+
+### 13.2 创建分组
+
+分组是在 SELECT 语句的 GROUP BY 子句中建立的。有以下几点规定
+
+- GROUP BY 子句可以包含任意数目的列。这使得能对分组进行嵌套,
+为数据分组提供更细致的控制。
+- 如果在 GROUP BY 子句中嵌套了分组,数据将在最后规定的分组上
+进行汇总。换句话说,在建立分组时,指定的所有列都一起计算
+- GROUP BY 子句中列出的每个列都必须是检索列或有效的表达式
+(但不能是聚集函数)。如果在 SELECT 中使用表达式,则必须在
+GROUP BY 子句中指定相同的表达式。不能使用别名。
+- 除聚集计算语句外, SELECT 语句中的每个列都必须在 GROUP BY 子
+句中给出。
+- 如果分组列中具有 NULL 值,则 NULL 将作为一个分组返回。如果列
+中有多行 NULL 值,它们将分为一组。
+- GROUP BY 子句必须出现在 WHERE 子句之后, ORDER BY 子句之前。
+
+`SELECT vend_id, COUNT(*) AS num_prods FROM products GROUP BY vend_id;`
+
+### 13.3 过滤分组
+
+使用 HAVING 子句过滤分组， HAVING 非常类似于 WHERE, 事实上,目前为止所学过的所有类型的WHERE 子句都可以用 HAVING 来替代。唯一的差别是WHERE 过滤行,而 HAVING 过滤分组。
+
+```SQL
+// 返回所有订单数不小于2的顾客
+SELECT cust_id COUNT(*) AS order_nums
+FROM orders 
+GROUP BY cust_id 
+HAVING COUNT(*) >= 2
+````
+
+```SQL
+// 返回不小于两个， 价格不低于10的产品的供应商
+// WHERE在数据分组前过滤， HAVING在数据分组后过滤
+SELECT vend_id, COUNT(*) AS num_prods
+FROM products
+WHERE prod_price >= 10
+GROUP BY vend_id
+HAVING COUNT(*) >=2;
+```
+
+### 13.4 分组和排序
+
+ORDER BY | GROUP BY
+--- | ---
+排序产生的输出 | 分组行。单输出可能不是分组的顺序
+任意列都可以使用 | 只可能使用选择列或表达式列， 而且必须使用每个选择列表达式
+比一定需要 | 如果与聚集函数一起使用列(或表达式)， 则必须使用
+
+```SQL
+// 订单价格大于等于50的订单， 并按照订单价格排序
+SELECT order_num, SUM(quantity*item_price) AS ordertotal
+FROM orderitems
+GROUP BY order_num
+HAVING SUM(quantity*item_price) >= 50
+ORDER BY ordertotal;
+```
+
+### 13.5 SELECT子句顺序
+
+子句 | 说明 | 是否必须使用
+--- | --- | ---
+SELECT | 要返回的列表或表达式 | 是
+FROM | 从中检索数据的表 | 仅在从表中选择数据时使用
+WHERE | 行级过滤 | 否
+GROUP BY | 分组说明 | 仅在按组计算聚集时使用
+HAVING | 组级过滤 | 否
+ORDER BY | 输出排序顺序 | 否
+LIMIT | 要检索的行数 | 否
+
+## 14 使用子查询
+
+### 14.1 子查询
+
+即嵌套在其他查询中的查询
+
+### 14.2 利用子查询进行过滤
+
+```SQL
+// orders 表存储订单号， 客户ID, 订单日期； orderitems存储订单的物品； customers表存储客户信息
+// 列出订购物品 TNT2 的所有客户
+SELECT cust_name, cust_contact
+FROM customers
+WHERE cust_id IN (SELECT cust_id
+                  FROM orders
+                  WHERE order_num IN (SELECT order_num
+                                      FROM orderitems
+                                      WHERE prod_id = 'TNT2'))
+
+```
+
+### 14.3 使用计算字段使用子查询
+
+```SQL
+// 列出 customers 表中每个客户的订单总数
+SELECT cust_name,
+       cust_state,
+       (SELECT COUNT(*)
+        FROM orders
+        WHERE orders.cust_id = customers.cust_id) AS order_num
+FROM customers
+ORDER BY cust_name;
 ```
